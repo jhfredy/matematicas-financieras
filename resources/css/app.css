@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Cifras de ancho fijo: en una tabla de 120 filas las columnas se alinean */
+  .cifras {
+    font-variant-numeric: tabular-nums;
+  }
+}
