@@ -122,6 +122,11 @@ class EquationBuilder
 
     private function curve(array $input): RateCurve
     {
+        // Al despejar la tasa la curva de entrada no se usa: solveRate() prueba las suyas
+        if (($input['solve_for'] ?? null) === 'rate') {
+            return RateCurve::flat(0.0);
+        }
+
         if (($input['rate_mode'] ?? 'flat') === 'flat') {
             return RateCurve::flat($this->periodicRate((float) $input['rate'], $input));
         }

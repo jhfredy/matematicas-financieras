@@ -10,15 +10,20 @@ class ValueEquationRequest extends RateInput
     {
         return [
             'rate_mode' => ['required', Rule::in(['flat', 'piecewise'])],
-            'rate' => ['required_if:rate_mode,flat', 'nullable', 'numeric', 'gt:0', 'max:1000'],
+            // Cuando la incógnita es la tasa, no se pide
+            'rate' => [
+                Rule::requiredIf(fn () => $this->input('rate_mode', 'flat') === 'flat'
+                    && $this->input('solve_for') !== 'rate'),
+                'nullable', 'numeric', 'gt:0', 'max:1000',
+            ],
             'rate_type' => ['required', Rule::enum(\FinMath\Rate\RateType::class)],
             'rate_period' => ['required', Rule::enum(\FinMath\Rate\Period::class)],
             'rate_reference' => ['nullable', Rule::enum(\FinMath\Rate\Period::class)],
 
             // El formulario siempre envía un tramo vacío; solo cuenta en modo por tramos
-            'segments' => ['exclude_unless:rate_mode,piecewise', 'required', 'array', 'min:1', 'max:10'],
-            'segments.*.from' => ['exclude_unless:rate_mode,piecewise', 'required', 'numeric', 'min:0'],
-            'segments.*.rate' => ['exclude_unless:rate_mode,piecewise', 'required', 'numeric', 'gt:0'],
+            'segments' => ['exclude_if:solve_for,rate', 'exclude_unless:rate_mode,piecewise', 'required', 'array', 'min:1', 'max:10'],
+            'segments.*.from' => ['exclude_if:solve_for,rate', 'exclude_unless:rate_mode,piecewise', 'required', 'numeric', 'min:0'],
+            'segments.*.rate' => ['exclude_if:solve_for,rate', 'exclude_unless:rate_mode,piecewise', 'required', 'numeric', 'gt:0'],
 
             'focal_date' => ['required', 'numeric', 'min:0'],
             'solve_for' => ['required', Rule::in(['amount', 'period', 'rate'])],

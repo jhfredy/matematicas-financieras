@@ -16,6 +16,9 @@ use FinMath\Solver\IterationTrace;
  */
 final class ValueEquation
 {
+    /** Tope de la búsqueda de cota al despejar n: 100 años mensuales */
+    private const MAX_PERIOD_SEARCH = 1200.0;
+
     private readonly RateCurve $curve;
 
     public function __construct(
@@ -122,12 +125,19 @@ final class ValueEquation
     ): IterationTrace {
         $rest = $this->residual();
         $sign = $direction === CashFlow::INFLOW ? 1.0 : -1.0;
+        $f = fn (float $n) => $rest + $sign * $amount * $this->curve->factor($n, $this->focalDate);
 
-        return (new Bisection)->solve(
-            fn (float $n) => $rest + $sign * $amount * $this->curve->factor($n, $this->focalDate),
-            $lo,
-            $hi ?? max(1.0, $this->flows->lastPeriod() * 3)
-        );
+        // Sin cota dada se parte del triple del último flujo y se dobla hasta
+        // encerrar la raíz: con un solo flujo en 0 el triple sería 0.
+        if ($hi === null) {
+            $hi = max(1.0, $this->flows->lastPeriod() * 3);
+
+            while ($f($lo) * $f($hi) > 0 && $hi < self::MAX_PERIOD_SEARCH) {
+                $hi *= 2;
+            }
+        }
+
+        return (new Bisection)->solve($f, $lo, $hi);
     }
 
     /** Tasa única que equilibra toda la operación */

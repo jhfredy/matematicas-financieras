@@ -98,7 +98,11 @@ const otherErrors = computed(() =>
       <section class="rounded-lg border border-stone-200 bg-white p-4">
         <h2 class="text-sm font-medium">Tasa de interés</h2>
 
-        <div class="mt-3 flex gap-5 text-sm">
+        <p v-if="form.solve_for === 'rate'" class="mt-2 text-xs text-stone-500">
+          La tasa es la incógnita: indique solo en qué periodo se expresan los flujos.
+        </p>
+
+        <div v-if="form.solve_for !== 'rate'" class="mt-3 flex gap-5 text-sm">
           <label class="flex items-center gap-2">
             <input v-model="form.rate_mode" type="radio" value="flat" class="text-stone-800" />
             Una sola tasa
@@ -114,7 +118,7 @@ const otherErrors = computed(() =>
             :model-value="rateFields"
             :options="options"
             :errors="form.errors"
-            :show-rate="form.rate_mode === 'flat'"
+            :show-rate="form.rate_mode === 'flat' && form.solve_for !== 'rate'"
             @update:model-value="applyRate"
           />
         </div>
